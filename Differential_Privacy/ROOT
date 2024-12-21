@@ -1,11 +1,9 @@
-(*
-  Title: ROOT
-  Last Updated: February 26, 2024
-  Author: Tetsuya Sato
-*)
+(* All sessions must be in chapter AFP *)
+chapter AFP
 
-session formalization = "HOL-Probability" +
-options [document = pdf, document_output = "output"]
+session "Differential_Privacy" = "HOL-Probability" +
+  options [timeout = 600]
+
 directories "List_Space"
 theories[document=false]
   "List_Space/Measurable_Isomorphism"
