@@ -8,7 +8,7 @@ theory Differential_Privacy_Divergence
   imports "Comparable_Probability_Measures"
 begin
 
-section \<open>Divergence for differential privacy\<close>
+section \<open>Divergence for Differential Privacy\<close>
 
 text\<open> First, we introduce the divergence for differential privacy. \<close>
 
@@ -21,7 +21,7 @@ lemma DP_divergence_SUP:
 
 subsection \<open>Basic Properties\<close>
 
-(* non-negativity *)
+subsubsection \<open>Non-negativity\<close>
 
 lemma DP_divergence_nonnegativity:
   shows "0 \<le> DP_divergence M N \<epsilon>"
@@ -32,7 +32,7 @@ proof(unfold DP_divergence_SUP, rule Sup_upper2[of 0])
     by force
 qed(auto)
 
-(* graded predicate \<longleftrightarrow> divergence *)
+subsubsection \<open>Graded predicate\<close>
 
 lemma DP_divergence_forall:
   shows "(\<forall> A \<in> (sets M). (measure M A - (exp \<epsilon>) * measure N A \<le> (\<delta> :: real)))
@@ -59,79 +59,9 @@ lemma DP_divergence_leI:
   shows "DP_divergence M N \<epsilon> \<le> (\<delta> :: real)"
   using assms unfolding DP_divergence_def by(intro cSup_least, fastforce+)
 
-(* DP_divergence is finite *)
 
-definition DP_divergence_real :: "'a measure \<Rightarrow> 'a measure \<Rightarrow> real \<Rightarrow> real " where
-  "DP_divergence_real M N \<epsilon> = Sup {(measure M A - (exp \<epsilon>) * measure N A) | A::'a set. A \<in> (sets M)}"
 
-lemma DP_divergence_real_SUP:
-  shows "DP_divergence_real M N \<epsilon> = (\<Squnion> (A::'a set) \<in> (sets M). (measure M A - (exp \<epsilon>) * measure N A))"
-  by (auto simp: setcompr_eq_image DP_divergence_real_def)
-
-lemma DP_divergence_real_leI:
-  assumes "\<And> A. A \<in> (sets M) \<Longrightarrow> measure M A \<le> (exp \<epsilon>) * measure N A + (\<delta> :: real)"
-  shows "DP_divergence_real M N \<epsilon> \<le> (\<delta> :: real)"
-  using assms unfolding DP_divergence_real_def by(intro cSup_least, fastforce+)
-
-(*
- If M and N are probability measures (finite measures) DP_divergence and DP_divergence_real are the same.
- However, if M and N are not finite, "DP_divergence_real M N \<epsilon>" is not defined, and hence it needs more
- cares about the finiteness of measures M and N than DP_divergence.
- For example the following lemma needs a kind of finiteness of M and N.
-*)
-
-lemma DP_divergence_is_real:
-  assumes M: "M \<in> space (prob_algebra L)"
-    and N: "N \<in> space (prob_algebra L)" (*we need them*)
-  shows "DP_divergence M N \<epsilon> = DP_divergence_real M N \<epsilon>"
-  unfolding DP_divergence_def DP_divergence_real_def
-proof(subst ereal_Sup)
-  interpret pM: prob_space M
-    using M actual_prob_space by auto
-  interpret pN: prob_space N
-    using N actual_prob_space by auto
-  {
-    fix A assume "A \<in> (sets M)"
-    have "pM.prob A - exp \<epsilon> * pN.prob A \<le> pM.prob A"
-      by auto
-    also have "... \<le> 1"
-      by auto
-    finally have 1: "pM.prob A - exp \<epsilon> * pN.prob A \<le> 1".
-
-    have " - exp \<epsilon> \<le> - exp \<epsilon> * pN.prob A"
-      by auto
-    also have "... \<le> pM.prob A - exp \<epsilon> * pN.prob A"
-      by auto
-    finally have 2: "- exp \<epsilon> \<le> pM.prob A - exp \<epsilon> * pN.prob A".
-    note 1 2
-  }note * = this
-
-  hence "\<Squnion> (ereal ` {pM.prob A - exp \<epsilon> * pN.prob A |A. A \<in> pM.events}) \<le> ereal 1"
-    unfolding SUP_le_iff by auto
-  moreover from * have "ereal (- exp \<epsilon>) \<le> \<Squnion> (ereal ` {pM.prob A - exp \<epsilon> * pN.prob A |A. A \<in> pM.events})"
-    by(intro SUP_upper2, auto)
-  ultimately show " \<bar>\<Squnion> (ereal ` {pM.prob A - exp \<epsilon> * pN.prob A |A. A \<in> pM.events})\<bar> \<noteq> \<infinity>"
-    by auto
-  have " {ereal (pM.prob A - exp \<epsilon> * pN.prob A) |A. A \<in> pM.events} = ereal ` {pM.prob A - exp \<epsilon> * pN.prob A |A. A \<in> pM.events}"
-    by blast
-  thus " \<Squnion> {ereal (pM.prob A - exp \<epsilon> * pN.prob A) |A. A \<in> pM.events} = \<Squnion> (ereal ` {pM.prob A - exp \<epsilon> * pN.prob A |A. A \<in> pM.events})"
-    by auto
-qed
-
-corollary DP_divergence_real_forall:
-  assumes M: "M \<in> space (prob_algebra L)"
-    and N: "N \<in> space (prob_algebra L)" (*we need them*)
-  shows "(\<forall> A \<in> (sets M). (measure M A - (exp \<epsilon>) * measure N A \<le> (\<delta> :: real))) \<longleftrightarrow> DP_divergence_real M N \<epsilon> \<le> (\<delta> :: real)"
-  unfolding DP_divergence_forall DP_divergence_is_real[OF M N] by auto
-
-corollary DP_divergence_real_inequality1:
-  assumes M: "M \<in> space (prob_algebra L)"
-    and N: "N \<in> space (prob_algebra L)" (*we need them*)
-    and "A \<in> (sets M)" and "DP_divergence_real M N \<epsilon> \<le> (\<delta> :: real)"
-  shows "measure M A \<le> (exp \<epsilon>) * measure N A + (\<delta> :: real)"
-  using DP_divergence_real_forall[OF M N] assms(3) assms(4) by force
-
-(* (0,0)-DP \<Rightarrow> outputs are the same. *)
+subsubsection \<open> \<open>(0,0)\<close>-DP means the equality of distributions \<close>
 
 lemma prob_measure_eqI_le:
   assumes M: "M \<in> space (prob_algebra L)"
@@ -198,7 +128,9 @@ proof(intro prob_measure_eqI_le[of M L N] M N ballI)
     by (simp add: pM.emeasure_eq_measure pN.emeasure_eq_measure)
 qed
 
-(* Conversion from pointwise DP (cf. [Kasiviswanathan and Smith JPC 2014]) to DP *)
+subsubsection \<open>Conversion from pointwise DP \cite{Prasad803anote} \<close>
+
+(* (cf. [Kasiviswanathan and Smith JPC 2014]) to DP *)
 
 lemma DP_divergence_pointwise:
   assumes M: "M \<in> space (prob_algebra L)"
@@ -241,7 +173,7 @@ proof(rule DP_divergence_leI)
   finally show "measure M A \<le> exp \<epsilon> * measure N A + \<delta>" .
 qed
 
-(* (reverse-) monotonicity for \<epsilon> *)
+subsubsection \<open>(Reverse-) Monotonicity for \<open>\<epsilon>\<close> \<close>
 
 lemma DP_divergence_monotonicity:
   assumes "\<epsilon>1 \<le> \<epsilon>2"
@@ -261,7 +193,7 @@ corollary DP_divergence_monotonicity':
   shows "DP_divergence M N \<epsilon>1 \<le> \<delta>1 \<Longrightarrow> DP_divergence M N \<epsilon>2 \<le> \<delta>2"
   by (meson DP_divergence_monotonicity M N assms gfp.leq_trans)
 
-(* reflexivity *)
+subsubsection \<open> Reflexivity \<close>
 
 lemma DP_divergence_reflexivity:
   shows "DP_divergence M M 0 = 0"
@@ -286,7 +218,7 @@ proof-
   from 1 2 show ?thesis by auto
 qed
 
-(* transitivity *)
+subsubsection \<open> Transitivity \<close>
 
 lemma DP_divergence_transitivity:
   assumes  DP1: "DP_divergence M1 M2 \<epsilon>1 \<le> 0"
@@ -304,7 +236,7 @@ proof(subst DP_divergence_forall[symmetric],intro ballI)
   thus "measure M1 A - exp (\<epsilon>1 + \<epsilon>2) * measure M3 A \<le> 0" by auto
 qed
 
-(* composability *)
+subsubsection \<open> Composability \<close>
 
 proposition DP_divergence_composability:
   assumes M: "M \<in> space (prob_algebra L)"
@@ -514,7 +446,7 @@ proof(subst DP_divergence_forall[THEN sym])
 	qed
 qed
 
-(* Post-processing inequality *)
+subsubsection \<open> Post-processing inequality  \<close>
 
 corollary DP_divergence_postprocessing:
   assumes M: "M \<in> space (prob_algebra L)"
@@ -537,7 +469,7 @@ proof-
   thus "DP_divergence (M \<bind> f) (N \<bind> f) \<epsilon>1 \<le> ereal \<delta>1"by auto
 qed
 
-(* law for the strength of the Giry monad *)
+subsubsection \<open> Law for the strength of the Giry monad \<close>
 
 lemma DP_divergence_strength:
   assumes "M \<in> space (prob_algebra L)"
@@ -562,7 +494,7 @@ proof-
     by auto
 qed
 
-(* additivity = a law for the double-strength *)
+subsubsection \<open> Additivity: law for the double-strength of the Giry monad\<close>
 
 lemma DP_divergence_additivity:
   assumes M: "M \<in> space (prob_algebra L)"
@@ -595,6 +527,8 @@ qed
 
 subsection \<open>Hypotehsis testing interpretation\<close>
 
+subsubsection \<open>Privacy region\<close>
+
 definition DP_region_one_side :: "real \<Rightarrow> real \<Rightarrow> (real \<times> real) set" where
   "DP_region_one_side \<epsilon> \<delta> = {(x::real,y::real). (x - exp(\<epsilon>) * y \<le> \<delta>) \<and> 0 \<le> x \<and> x \<le> 1 \<and> 0\<le> y \<and> y \<le> 1} "
 
@@ -609,7 +543,7 @@ proof-
     by(subst DP_divergence_forall[symmetric],unfold  DP_region_one_side_def,auto intro!: prob_space.prob_le_1)
 qed
 
-subsubsection \<open> 2-generatedness of DP [Balle+, AISTATS2020] \<close>
+subsubsection \<open>2-generatedness of @{term DP_divergence} \cite{DBLP:journals/corr/abs-1905-09982} \<close>
 
 lemma DP_divergence_2_generated_deterministic:
   assumes M: "M \<in> space (prob_algebra L)"
@@ -698,5 +632,79 @@ proof-
     qed
   qed
 qed
+
+subsection \<open>real version of @{term DP_divergence}\<close>
+
+subsubsection \<open>finiteness\<close>
+
+definition DP_divergence_real :: "'a measure \<Rightarrow> 'a measure \<Rightarrow> real \<Rightarrow> real " where
+  "DP_divergence_real M N \<epsilon> = Sup {(measure M A - (exp \<epsilon>) * measure N A) | A::'a set. A \<in> (sets M)}"
+
+lemma DP_divergence_real_SUP:
+  shows "DP_divergence_real M N \<epsilon> = (\<Squnion> (A::'a set) \<in> (sets M). (measure M A - (exp \<epsilon>) * measure N A))"
+  by (auto simp: setcompr_eq_image DP_divergence_real_def)
+
+lemma DP_divergence_real_leI:
+  assumes "\<And> A. A \<in> (sets M) \<Longrightarrow> measure M A \<le> (exp \<epsilon>) * measure N A + (\<delta> :: real)"
+  shows "DP_divergence_real M N \<epsilon> \<le> (\<delta> :: real)"
+  using assms unfolding DP_divergence_real_def by(intro cSup_least, fastforce+)
+
+subsubsection \<open>real version of @{term DP_divergence}\<close>
+
+text \<open> If @{term M} and  @{term N} are finite then @{term DP_divergence} and the following version @{term DP_divergence_real} are the same.
+ However, if  @{term M} and @{term N} are not finite, @{term "DP_divergence_real M N \<epsilon>"} is not well defined.
+ Hence, the latter needs extra assumptions for the finiteness of measures @{term M} and @{term N}.
+ For example the following lemmas need a kind of finiteness of@{term M} and @{term N}.\<close>
+
+lemma DP_divergence_is_real:
+  assumes M: "M \<in> space (prob_algebra L)"
+    and N: "N \<in> space (prob_algebra L)" (*we need them*)
+  shows "DP_divergence M N \<epsilon> = DP_divergence_real M N \<epsilon>"
+  unfolding DP_divergence_def DP_divergence_real_def
+proof(subst ereal_Sup)
+  interpret pM: prob_space M
+    using M actual_prob_space by auto
+  interpret pN: prob_space N
+    using N actual_prob_space by auto
+  {
+    fix A assume "A \<in> (sets M)"
+    have "pM.prob A - exp \<epsilon> * pN.prob A \<le> pM.prob A"
+      by auto
+    also have "... \<le> 1"
+      by auto
+    finally have 1: "pM.prob A - exp \<epsilon> * pN.prob A \<le> 1".
+
+    have " - exp \<epsilon> \<le> - exp \<epsilon> * pN.prob A"
+      by auto
+    also have "... \<le> pM.prob A - exp \<epsilon> * pN.prob A"
+      by auto
+    finally have 2: "- exp \<epsilon> \<le> pM.prob A - exp \<epsilon> * pN.prob A".
+    note 1 2
+  }note * = this
+
+  hence "\<Squnion> (ereal ` {pM.prob A - exp \<epsilon> * pN.prob A |A. A \<in> pM.events}) \<le> ereal 1"
+    unfolding SUP_le_iff by auto
+  moreover from * have "ereal (- exp \<epsilon>) \<le> \<Squnion> (ereal ` {pM.prob A - exp \<epsilon> * pN.prob A |A. A \<in> pM.events})"
+    by(intro SUP_upper2, auto)
+  ultimately show " \<bar>\<Squnion> (ereal ` {pM.prob A - exp \<epsilon> * pN.prob A |A. A \<in> pM.events})\<bar> \<noteq> \<infinity>"
+    by auto
+  have " {ereal (pM.prob A - exp \<epsilon> * pN.prob A) |A. A \<in> pM.events} = ereal ` {pM.prob A - exp \<epsilon> * pN.prob A |A. A \<in> pM.events}"
+    by blast
+  thus " \<Squnion> {ereal (pM.prob A - exp \<epsilon> * pN.prob A) |A. A \<in> pM.events} = \<Squnion> (ereal ` {pM.prob A - exp \<epsilon> * pN.prob A |A. A \<in> pM.events})"
+    by auto
+qed
+
+corollary DP_divergence_real_forall:
+  assumes M: "M \<in> space (prob_algebra L)"
+    and N: "N \<in> space (prob_algebra L)" (*we need them*)
+  shows "(\<forall> A \<in> (sets M). (measure M A - (exp \<epsilon>) * measure N A \<le> (\<delta> :: real))) \<longleftrightarrow> DP_divergence_real M N \<epsilon> \<le> (\<delta> :: real)"
+  unfolding DP_divergence_forall DP_divergence_is_real[OF M N] by auto
+
+corollary DP_divergence_real_inequality1:
+  assumes M: "M \<in> space (prob_algebra L)"
+    and N: "N \<in> space (prob_algebra L)" (*we need them*)
+    and "A \<in> (sets M)" and "DP_divergence_real M N \<epsilon> \<le> (\<delta> :: real)"
+  shows "measure M A \<le> (exp \<epsilon>) * measure N A + (\<delta> :: real)"
+  using DP_divergence_real_forall[OF M N] assms(3) assms(4) by force
 
 end

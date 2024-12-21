@@ -21,7 +21,7 @@ proof-
     by(subst sum.reindex_bij_witness[of _ Suc "\<lambda>i. i - 1" "{0..n}"],auto simp: 0)
 qed
 
-subsection\<open> A locale for L1-norm \<close>
+subsection\<open> A locale for L1-norm of Lists \<close>
 
 locale L1_norm_list = Metric_space +
   fixes n::nat

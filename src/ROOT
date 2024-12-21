@@ -23,15 +23,17 @@ theories[document=false]
   "Additional_Lemmas_for_Integrals"
 
 theories
+  "Laplace_Distribution"
+
+theories
   "Comparable_Probability_Measures"
   "Differential_Privacy_Divergence"
   "Differential_Privacy_Randomized_Response"
-  "Laplace_Distribution"
   "Differential_Privacy_Laplace_Mechanism"
   "Differential_Privacy_Laplace_Mechanism_Multi"
   "Differential_Privacy_Standard"
   "Differential_Privacy_Example_Report_Noisy_Max"
 
-
 document_files
   "root.tex"
+  "root.bib"

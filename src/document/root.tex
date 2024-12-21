@@ -36,9 +36,26 @@
 
 \begin{document}
 
-\title{formalization}
-\author{tetsuya sato}
+\title{Differential Privacy}
+\author{Tetsuya Sato \and Yasuhiko Minamide}
 \maketitle
+
+\abstract{
+This entry contains formalization of differential privacy in a general setting,
+based on the seminal textbook of Dwork and Roth~\cite{DworkRothTCS-042}
+and the papers of statistical divergence for differential privacy~\cite{BartheOlmedo2013,Sato_Katsumata_2023}.
+
+This entry includes the following formalization:
+\begin{itemize}
+\item Measurable space of lists and measurability of list operations
+\item Laplace distribution
+\item The statisatical divergence for differential privacy
+\item Differential privacy and its basic properties
+\item Randomized Response
+\item Laplace mechanism
+\item The report noisy max mechanism in the sense of \cite{DworkRothTCS-042}.
+\end{itemize}
+}
 
 \tableofcontents
 
@@ -50,10 +67,12 @@
 
 % optional bibliography
 \bibliographystyle{abbrv}
-\bibliography{reference}
+\bibliography{root}
 \end{document}
 
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: t
 %%% End:
+\endinput
+%:%file=/cygdrive/e/Dropbox/;研究/差分プライバシーの形式検証/differential_privacy_formalization/formalization/document/root.tex%:%

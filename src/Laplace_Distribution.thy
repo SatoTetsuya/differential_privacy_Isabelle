@@ -9,9 +9,11 @@ theory Laplace_Distribution
     "Additional_Lemmas_for_Calculation"
 begin
 
-subsection \<open>Laplace Distributions\<close>
+section \<open>Laplace Distribution\<close>
 
-(* We refer the standard library HOL/Probability/Distributions.thy *)
+subsection \<open> Desity Function and Cumulative Distribution Function \<close>
+
+text \<open> We refer {\tt  HOL/Probability/Distributions.thy} in the standard library. \<close>
 
 definition laplace_density :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real" where
   "laplace_density l m x = (if l > 0 then exp(-\<bar>x - m\<bar> / l) / (2 * l) else 0)"
@@ -289,7 +291,7 @@ lemma emeasure_laplace_density:
   shows "emeasure (density lborel (laplace_density l m)) {.. a} = laplace_CDF l m a"
   by (auto simp: emeasure_density nn_integral_laplace_density assms)
 
-subsubsection \<open>Moments of Laplace Distributions\<close>
+subsection \<open> Moments \<close>
 
 lemma laplace_moment_0_a:
   assumes pos[arith]: "0 < l"
@@ -783,7 +785,7 @@ lemma integral_laplace_density[simp, intro]:
   shows "(\<integral>x. laplace_density l m x \<partial>lborel) = 1"
   using integral_laplace_moment_even[of l m 0,OF pos] by auto
 
-subsubsection \<open>Probability Space Distributed by Laplace Distributions\<close>
+subsection \<open>The Probability Space Distributed by Laplace Distribution\<close>
 
 lemma prob_space_laplacian_density:
   assumes pos[arith]: "0 < l"

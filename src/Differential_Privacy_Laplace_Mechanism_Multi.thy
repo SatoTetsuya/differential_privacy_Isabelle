@@ -8,8 +8,7 @@ theory Differential_Privacy_Laplace_Mechanism_Multi
     "Differential_Privacy_Laplace_Mechanism"
 begin
 
-subsection \<open>Multiple version of Laplace mechanism as a noise-adding mechanism\<close>
-
+subsection \<open>Bundled Laplace Noise\<close>
 
 lemma space_listM_borel_UNIV[measurable,simp]:
   shows "space (listM borel) = UNIV"

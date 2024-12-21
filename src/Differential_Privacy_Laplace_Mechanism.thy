@@ -8,6 +8,8 @@ theory Differential_Privacy_Laplace_Mechanism
     "Laplace_Distribution"
 begin
 
+section \<open>Laplace mechanism \<close>
+
 subsection \<open>Laplace mechanism as a noise-adding mechanism\<close>
 
 subsubsection \<open>Laplace distribution with scale \<open>b\<close> and average \<open>\<mu>\<close>\<close>
