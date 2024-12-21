@@ -319,7 +319,7 @@ next
   have " r1 / b + r2 / b \<le> r / b"
     by (metis Cons.prems(1) add_divide_distrib divide_right_mono leI order_trans_rules(20) req)
   hence "DP_divergence (Lap_dist_list b (x # xs2)) (Lap_dist_list b ys) (r / b) \<le> DP_divergence (Lap_dist_list b (x # xs2)) (Lap_dist_list b ys) (r1 / b + r2 / b)"
-    by(intro DP_divergence_monotonicity[of "(Lap_dist_list b (x # xs2))" "listM borel" " (Lap_dist_list b ys)" "(r1 / b + r2 / b)" " (r / b)" ] Laprepsp') auto
+    by(intro DP_divergence_monotonicity Laprepsp') auto
   also have " ... \<le> ereal (0 + 0)"
     unfolding ys Lap_dist_list.simps(2)
   proof(rule DP_divergence_composability[of "Lap_dist b x" borel "Lap_dist b y" _ _ _ "r1 / b" 0 "r2 / b" 0])
@@ -375,7 +375,7 @@ proof(cases "r = 0")
   have nne: "0 \<le> \<epsilon>"
     using pose by auto
   then show ?thesis
-    unfolding * using DP_divergence_reflexivity'[of "Lap_dist_list (r / \<epsilon>) ys" "listM borel" \<epsilon> , OF Laprepsp'[of "(r / \<epsilon>)" ys ] nne ] by auto
+    unfolding * using DP_divergence_reflexivity'[of \<epsilon>  "Lap_dist_list (r / \<epsilon>) ys"] by auto
 next
   case False
   with posr have posr': "0 < r"

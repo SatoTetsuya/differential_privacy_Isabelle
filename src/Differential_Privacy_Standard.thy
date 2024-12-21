@@ -82,7 +82,7 @@ proof(intro ballI)
   moreover have "M d1 \<in> space (prob_algebra R)" "M d2 \<in> space (prob_algebra R)" "M d3 \<in> space (prob_algebra R)"
     using a b by(auto intro!: measurable_space[OF M])
   ultimately have 1: "DP_inequality (M d1) (M d3) (\<epsilon>1 + \<epsilon>2) 0" and "DP_inequality (M d3) (M d1) (\<epsilon>2 + \<epsilon>1) 0"
-    unfolding DP_inequality_cong_DP_divergence zero_ereal_def[symmetric] by(intro DP_divergence_transitivity[of _ _ "(M d2)"],auto)+
+    unfolding DP_inequality_cong_DP_divergence zero_ereal_def[symmetric] by(intro DP_divergence_transitivity[of _  "(M d2)"],auto)+
   hence "DP_inequality (M d3) (M d1) (\<epsilon>1 + \<epsilon>2) 0"
     by argo
   with 1 show "case x of (d1, d2) \<Rightarrow> DP_inequality (M d1) (M d2) (\<epsilon>1 + \<epsilon>2) 0 \<and> DP_inequality (M d2) (M d1) (\<epsilon>1 + \<epsilon>2) 0"
@@ -143,8 +143,7 @@ proof
 qed
 
 proposition differential_privacy_relax:
-  assumes "\<epsilon> \<ge> 0"and "\<delta> \<ge> 0"
-    and DP:"differential_privacy M adj \<epsilon> \<delta>"
+  assumes DP:"differential_privacy M adj \<epsilon> \<delta>"
     and 1: "\<epsilon> \<le> \<epsilon>'"and 2: "\<delta> \<le> \<delta>'"
   shows "differential_privacy M adj \<epsilon>' \<delta>'"
   using DP DP_inequality_relax [OF 1 2] unfolding differential_privacy_def by blast
@@ -152,7 +151,7 @@ proposition differential_privacy_relax:
 paragraph \<open>Stability for post-processing (cf. [Prop 2.1, AFDP])\<close>
 
 proposition differential_privacy_postprocessing:
-  assumes "\<epsilon> \<ge> 0"and "\<delta> \<ge> 0"
+  assumes "\<epsilon> \<ge> 0" 
     and "differential_privacy M adj \<epsilon> \<delta>"
     and M: "M \<in> X \<rightarrow>\<^sub>M (prob_algebra R)"
     and f: "f \<in> R \<rightarrow>\<^sub>M (prob_algebra R')" (*probabilistic post-process*)
@@ -160,6 +159,7 @@ proposition differential_privacy_postprocessing:
   shows "differential_privacy (\<lambda>x. do{y \<leftarrow> M x; f y}) adj \<epsilon> \<delta>"
 proof(subst differential_privacy_def)
   note [measurable] = M f
+  note [arith] = assms(1)
   show "\<forall>(d1, d2)\<in> adj. DP_inequality (M d1 \<bind> f) (M d2 \<bind> f) \<epsilon> \<delta> \<and> DP_inequality (M d2 \<bind> f) (M d1 \<bind> f) \<epsilon> \<delta> "
   proof
     fix x ::"'a \<times> 'a"assume x:"x \<in> adj"
@@ -168,22 +168,22 @@ proof(subst differential_privacy_def)
         and d1: "d1 \<in> space X"
         and d2: "d2 \<in> space X"
         and d: "(d1,d2) \<in> Restr adj (space X)"
-        and div1: "DP_divergence (M d1) (M d2) \<epsilon> \<le> \<delta> "
-        and div2: "DP_divergence (M d2) (M d1) \<epsilon> \<le> \<delta>"
+        and div1[simp]: "DP_divergence (M d1) (M d2) \<epsilon> \<le> \<delta> "
+        and div2[simp]: "DP_divergence (M d2) (M d1) \<epsilon> \<le> \<delta>"
       using DP_inequality_cong_DP_divergence assms differential_privacy_def[of M adj \<epsilon> \<delta>] by fastforce+
-    hence Md1: "M d1 \<in> space (prob_algebra R)"and Md2: "M d2 \<in> space (prob_algebra R)"
+    hence Md1[simp]: "M d1 \<in> space (prob_algebra R)"and Md2[simp]: "M d2 \<in> space (prob_algebra R)"
       by(metis M measurable_space)+
     have "DP_divergence (M d1 \<bind> f) (M d2 \<bind> f) \<epsilon> \<le> \<delta>"
-      by(rule DP_divergence_postprocessing[where L = R and K = R'],auto simp: assms(1,2) div1 Md1 Md2)
+      by(auto simp: DP_divergence_postprocessing[where L = R and K = R'])
     moreover have "DP_divergence (M d2 \<bind> f) (M d1 \<bind> f) \<epsilon> \<le> \<delta>"
-      by(rule DP_divergence_postprocessing[where L = R and K = R'],auto simp: assms(1,2) div2 Md1 Md2)
+      by(auto simp: DP_divergence_postprocessing[where L = R and K = R'])
     ultimately show "case x of (d1,d2) \<Rightarrow> DP_inequality (M d1 \<bind> f) (M d2 \<bind> f) \<epsilon> \<delta> \<and> DP_inequality (M d2 \<bind> f) (M d1 \<bind> f) \<epsilon> \<delta>"
       unfolding DP_inequality_cong_DP_divergence using x by auto
   qed
 qed
 
 corollary differential_privacy_postprocessing_deterministic:
-  assumes "\<epsilon> \<ge> 0"and "\<delta> \<ge> 0"
+  assumes "\<epsilon> \<ge> 0"
     and "differential_privacy M adj \<epsilon> \<delta>"
     and M[measurable]: "M \<in> X \<rightarrow>\<^sub>M (prob_algebra R)"
     and f[measurable]: "f \<in> R \<rightarrow>\<^sub>M R'" (*deterministic post-process*)
@@ -194,7 +194,7 @@ corollary differential_privacy_postprocessing_deterministic:
 text \<open> To handle the sensitivity, we prepare the conversions of adjacency relations by pre-processing. \<close>
 
 lemma differential_privacy_preprocessing:
-  assumes "\<epsilon> \<ge> 0"and "\<delta> \<ge> 0"
+  assumes "\<epsilon> \<ge> 0"
     and "differential_privacy M adj \<epsilon> \<delta>"
     and f: "f \<in> X' \<rightarrow>\<^sub>M X" (*deterministic pre-process*)
     and ftr: "\<forall>(x,y) \<in> adj'. (f x, f y) \<in> adj"
@@ -220,8 +220,8 @@ qed
 paragraph \<open> "Adaptive"composition (cf. [Theorem B.1, AFDP])\<close>
 
 proposition differential_privacy_composition_adaptive:
-  assumes "\<epsilon> \<ge> 0"and "\<delta> \<ge> 0"
-    and "\<epsilon>' \<ge> 0"and "\<delta>' \<ge> 0"
+  assumes "\<epsilon> \<ge> 0"
+    and "\<epsilon>' \<ge> 0"
     and M: "M \<in> X \<rightarrow>\<^sub>M (prob_algebra Y)"
     and DPM: "differential_privacy M adj \<epsilon> \<delta>"
     and N: "N \<in> (X \<Otimes>\<^sub>M Y) \<rightarrow>\<^sub>M (prob_algebra Z)"
@@ -257,8 +257,8 @@ proof(subst differential_privacy_def)
     hence p1: "\<forall>y \<in> space Y. DP_divergence (N (x1, y)) (N (x2, y)) \<epsilon>' \<le> \<delta>'"and p2: "\<forall>y \<in> space Y. DP_divergence (N (x2, y)) (N (x1, y)) \<epsilon>' \<le> \<delta>'"
       by auto
     hence "DP_divergence ( M x1 \<bind> (\<lambda>y. N (x1, y))) ( M x2 \<bind> (\<lambda>y. N (x2, y))) (\<epsilon> + \<epsilon>') \<le> (\<delta> + \<delta>') \<and> DP_divergence ( M x2 \<bind> (\<lambda>y. N (x2, y))) ( M x1 \<bind> (\<lambda>y. N (x1, y))) (\<epsilon> + \<epsilon>') \<le> (\<delta> + \<delta>')"
-      using DP_divergence_composability[of "M x1 "Y "M x2 ""(\<lambda>y. N (x1, y))"Z "(\<lambda>y. N (x2, y))"\<epsilon> \<delta> \<epsilon>' \<delta>' ,OF Mx1 Mx2 N1 N2 div1 _ assms(1,3)]
-        DP_divergence_composability[of "M x2 "Y "M x1 ""(\<lambda>y. N (x2, y))"Z "(\<lambda>y. N (x1, y))"\<epsilon> \<delta> \<epsilon>' \<delta>' ,OF Mx2 Mx1 N2 N1 div2 _ assms(1,3)] by auto
+      using DP_divergence_composability[of "M x1 "Y "M x2 ""(\<lambda>y. N (x1, y))"Z "(\<lambda>y. N (x2, y))"\<epsilon> \<delta> \<epsilon>' \<delta>' ,OF Mx1 Mx2 N1 N2 div1 _ assms(1,2)]
+        DP_divergence_composability[of "M x2 "Y "M x1 ""(\<lambda>y. N (x2, y))"Z "(\<lambda>y. N (x1, y))"\<epsilon> \<delta> \<epsilon>' \<delta>' ,OF Mx2 Mx1 N2 N1 div2 _ assms(1,2)] by auto
     thus "case x of (x1,x2) \<Rightarrow> DP_inequality ( M x1 \<bind> (\<lambda>y. N (x1, y))) ( M x2 \<bind> (\<lambda>y. N (x2, y))) (\<epsilon> + \<epsilon>') (\<delta> + \<delta>') \<and> DP_inequality ( M x2 \<bind> (\<lambda>y. N (x2, y))) ( M x1 \<bind> (\<lambda>y. N (x1, y))) (\<epsilon> + \<epsilon>') (\<delta> + \<delta>')"
       by (auto simp: x DP_inequality_cong_DP_divergence)
   qed
@@ -267,8 +267,8 @@ qed
 paragraph \<open> "Sequential"composition [Theorem 3.14, AFDP, generalized] \<close>
 
 proposition differential_privacy_composition_pair:
-  assumes "\<epsilon> \<ge> 0"and "\<delta> \<ge> 0"
-    and "\<epsilon>' \<ge> 0"and "\<delta>' \<ge> 0"
+  assumes "\<epsilon> \<ge> 0"
+    and "\<epsilon>' \<ge> 0"
     and DPM: "differential_privacy M adj \<epsilon> \<delta>"
     and M[measurable]: "M \<in> X \<rightarrow>\<^sub>M (prob_algebra Y)"
     and DPN: "differential_privacy N adj \<epsilon>' \<delta>'"
@@ -284,7 +284,7 @@ proof-
     hence m: "(\<lambda>x. N x \<bind> (\<lambda>z. return (Y \<Otimes>\<^sub>M Z) (y, z))) \<in> X \<rightarrow>\<^sub>M prob_algebra (Y \<Otimes>\<^sub>M Z)"
       by auto
     show "differential_privacy (\<lambda>x. N x \<bind> (\<lambda>z. return (Y \<Otimes>\<^sub>M Z) (y, z))) adj \<epsilon>' \<delta>'"
-      by(rule differential_privacy_postprocessing[where f = "(\<lambda>z. return (Y \<Otimes>\<^sub>M Z) (y, z))"and R' = "(Y \<Otimes>\<^sub>M Z)", OF assms(3,4,7,8) ], auto simp: assms(9))
+      by(rule differential_privacy_postprocessing[where f = "(\<lambda>z. return (Y \<Otimes>\<^sub>M Z) (y, z))" and R' = "(Y \<Otimes>\<^sub>M Z)" and R = "Z" and X = X], auto simp: assms)
   qed
   thus ?thesis unfolding p using assms
     by(subst differential_privacy_composition_adaptive[where N ="(\<lambda>(x,y). N x \<bind> (\<lambda>z. return (Y \<Otimes>\<^sub>M Z) (y, z)) )"and Z = "(Y \<Otimes>\<^sub>M Z)"], auto ) (*takes a bit long time*)
@@ -439,16 +439,16 @@ lemma adj_sub: "adj_L1_norm \<subseteq> space sp_Dataset \<times> space sp_Datas
   unfolding sp_Dataset_def adj_L1_norm_def by blast
 
 lemmas differential_privacy_relax_AFDP' =
-  differential_privacy_relax[of _ _ _  adj_L1_norm]
+  differential_privacy_relax[of  _  adj_L1_norm]
   (* postprocessing [Prop 2.1, AFDP] *)
 lemmas differential_privacy_postprocessing_AFDP =
-  differential_privacy_postprocessing[of _ _ _ adj_L1_norm, OF _ _ _ _ _ adj_sub]
+  differential_privacy_postprocessing[of _ _  adj_L1_norm, OF _ _ _ _  adj_sub]
   (* "adaptive"composition [Theorem B.1, AFDP] *)
 lemmas differential_privacy_composition_adaptive_AFDP =
-  differential_privacy_composition_adaptive[of _ _ _ _ _ _ _ adj_L1_norm, OF _ _ _ _ _ _ _ _ adj_sub]
+  differential_privacy_composition_adaptive[of _ _ _ _ _  adj_L1_norm, OF _ _ _ _ _ _ adj_sub]
   (* "sequential"composition [Theorem 3.14, AFDP, generalized] *)
 lemmas differential_privacy_composition_pair_AFDP =
-  differential_privacy_composition_pair[of _ _ _ _ _ adj_L1_norm, OF _ _ _ _ _ _ _ _ adj_sub]
+  differential_privacy_composition_pair[of _ _ _ adj_L1_norm, OF _ _ _ _ _ _ adj_sub]
 
 text\<open>Group privacy [Theorem 2.2, AFDP].\<close>
 

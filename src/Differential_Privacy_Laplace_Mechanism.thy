@@ -218,7 +218,7 @@ proof(cases "r = 0")
   with assms have 1: "x = y" and 2: " (r / \<epsilon>) = 0"
     by auto
   thus ?thesis
-    unfolding 1 2 using DP_divergence_reflexivity'[of "Lap_dist 0 y" borel \<epsilon>] assms by auto
+    unfolding 1 2 using DP_divergence_reflexivity'[of \<epsilon>  "Lap_dist 0 y" ] assms by auto
 next
   case False
   with assms have 0: "0 < r" and 1: "0 < (r / \<epsilon>)"

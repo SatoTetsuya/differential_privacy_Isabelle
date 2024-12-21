@@ -1335,8 +1335,6 @@ theorem differential_privacy_LapMech_RNM:
 proof(rule differential_privacy_preprocessing)
   show "(0::real) \<le> \<epsilon>"
     using pose by auto
-  show "(0::real) \<le> 0"
-    by auto
   show "differential_privacy RNM' {(xs, ys) | xs ys. list_all2 (\<lambda> x y. x \<ge> y \<and> x \<le> y + 1) xs ys \<or> list_all2 (\<lambda> x y. x \<ge> y \<and> x \<le> y + 1) ys xs } \<epsilon> 0"
     by (rule differential_privacy_LapMech_RNM'_sym)
   show "c \<in> M \<rightarrow>\<^sub>M listM borel"
@@ -1642,8 +1640,6 @@ proof(rule differential_privacy_postprocessing[where R' = "count_space UNIV" and
 
   show "0 \<le> real (m * \<epsilon>)"
     using pose by auto
-  show "0 \<le> (0::real)"
-    by auto
   show "(\<lambda>x. Lap_dist_list (1 / real \<epsilon>) (map real (counting_query x))) \<in> (listM (count_space UNIV)) \<rightarrow>\<^sub>M prob_algebra (listM borel)"
     by auto
   show " (\<lambda>y. return (count_space UNIV) (argmax_list y)) \<in> listM borel \<rightarrow>\<^sub>M prob_algebra (count_space UNIV)"
@@ -1654,8 +1650,6 @@ proof(rule differential_privacy_postprocessing[where R' = "count_space UNIV" and
  adj_L1_norm (m * \<epsilon>) 0"
   proof(intro differential_privacy_preprocessing)
     show "0 \<le> real (m * \<epsilon>)"
-      by fact
-    show "0 \<le> (0::real)"
       by fact
     show " (\<lambda>x. map real (counting_query x)) \<in> listM (count_space UNIV) \<rightarrow>\<^sub>M listM borel"
       by auto

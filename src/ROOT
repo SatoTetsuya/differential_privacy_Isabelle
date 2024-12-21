@@ -25,6 +25,7 @@ theories[document=false]
 theories
   "Comparable_Probability_Measures"
   "Differential_Privacy_Divergence"
+  "Differential_Privacy_Randomized_Response"
   "Laplace_Distribution"
   "Differential_Privacy_Laplace_Mechanism"
   "Differential_Privacy_Laplace_Mechanism_Multi"

@@ -21,6 +21,17 @@ lemma DP_divergence_SUP:
 
 subsection \<open>Basic Properties\<close>
 
+(* non-negativity *)
+
+lemma DP_divergence_nonnegativity:
+  shows "0 \<le> DP_divergence M N \<epsilon>"
+proof(unfold DP_divergence_SUP, rule Sup_upper2[of 0])
+  have "{} \<in> sets M" "(\<lambda>A :: 'a set. ereal (measure M A - exp \<epsilon> * measure N A)) {} = 0"
+    by auto
+  thus "0 \<in> (\<lambda>A. ereal (measure M A - exp \<epsilon> * measure N A)) ` sets M"
+    by force
+qed(auto)
+
 (* graded predicate \<longleftrightarrow> divergence *)
 
 lemma DP_divergence_forall:
@@ -29,9 +40,19 @@ lemma DP_divergence_forall:
   unfolding DP_divergence_SUP by (auto simp: SUP_le_iff)
 
 lemma DP_divergence_leE:
-  assumes "DP_divergence M N \<epsilon> \<le> (\<delta> :: real)" and "A \<in> (sets M)"
+  assumes "DP_divergence M N \<epsilon> \<le> (\<delta> :: real)"
   shows "measure M A \<le> (exp \<epsilon>) * measure N A + (\<delta> :: real)"
-  using DP_divergence_forall assms(1) assms(2) by force
+proof(cases  "A \<in> (sets M)")
+  case True
+  then show ?thesis using DP_divergence_forall assms(1) by force
+next
+  case False (* If "A \<in> (sets M)" then "measure M A = 0" *)
+  then have "measure M A = 0 " "0 \<le>  measure N A " "0 \<le> (exp \<epsilon>)"
+    using measure_notin_sets by auto
+  moreover have "0 \<le> ereal \<delta>"
+    using assms DP_divergence_nonnegativity[of M N \<epsilon>] dual_order.trans by blast
+  ultimately show ?thesis by auto
+qed
 
 lemma DP_divergence_leI:
   assumes "\<And> A. A \<in> (sets M) \<Longrightarrow> measure M A \<le> (exp \<epsilon>) * measure N A + (\<delta> :: real)"
@@ -220,28 +241,15 @@ proof(rule DP_divergence_leI)
   finally show "measure M A \<le> exp \<epsilon> * measure N A + \<delta>" .
 qed
 
-(* non-negativity *)
-
-lemma DP_divergence_nonnegativity:
-  shows "0 \<le> DP_divergence M N \<epsilon>"
-proof(unfold DP_divergence_SUP, rule Sup_upper2[of 0])
-  have "{} \<in> sets M" "(\<lambda>A :: 'a set. ereal (measure M A - exp \<epsilon> * measure N A)) {} = 0"
-    by auto
-  thus "0 \<in> (\<lambda>A. ereal (measure M A - exp \<epsilon> * measure N A)) ` sets M"
-    by force
-qed(auto)
-
 (* (reverse-) monotonicity for \<epsilon> *)
 
 lemma DP_divergence_monotonicity:
-  assumes M: "M \<in> space (prob_algebra L)"
-    and N: "N \<in> space (prob_algebra L)"
-    and "\<epsilon>1 \<le> \<epsilon>2"
+  assumes "\<epsilon>1 \<le> \<epsilon>2"
   shows "DP_divergence M N \<epsilon>2 \<le> DP_divergence M N \<epsilon>1"
 proof(unfold DP_divergence_SUP, rule SUP_mono)
   fix A assume *: "A \<in> sets M"
   have "ereal (measure M A - exp \<epsilon>2 * measure N A) \<le> ereal (measure M A - exp \<epsilon>1 * measure N A)"
-    by (auto simp: assms(3) mult_mono')
+    by (auto simp: assms mult_mono')
   with * show "\<exists>m\<in>sets M. ereal (measure M A - exp \<epsilon>2 * measure N A) \<le> ereal (measure M m - exp \<epsilon>1 * measure N m)"
     by blast
 qed
@@ -265,12 +273,11 @@ proof(unfold DP_divergence_SUP)
 qed
 
 corollary DP_divergence_reflexivity':
-  assumes M: "M \<in> space (prob_algebra L)"
-    and "0 \<le> \<epsilon> "
+  assumes "0 \<le> \<epsilon> "
   shows "DP_divergence M M \<epsilon> = 0"
 proof-
   have "DP_divergence M M \<epsilon> \<le> DP_divergence M M 0"
-    by(rule DP_divergence_monotonicity[where L = L],auto simp: assms)
+    by(rule DP_divergence_monotonicity, auto simp: assms)
   also have "... = 0"
     by(auto simp: DP_divergence_reflexivity)
   finally have 1: "DP_divergence M M \<epsilon> \<le> 0".
@@ -282,22 +289,16 @@ qed
 (* transitivity *)
 
 lemma DP_divergence_transitivity:
-  assumes M1: "M1 \<in> space (prob_algebra L)"
-    and M2: "M2 \<in> space (prob_algebra L)"
-    and DP1: "DP_divergence M1 M2 \<epsilon>1 \<le> 0"
+  assumes  DP1: "DP_divergence M1 M2 \<epsilon>1 \<le> 0"
     and DP2: "DP_divergence M2 M3 \<epsilon>2 \<le> 0"
   shows "DP_divergence M1 M3 (\<epsilon>1+\<epsilon>2) \<le> 0"
   unfolding zero_ereal_def
 proof(subst DP_divergence_forall[symmetric],intro ballI)
-  interpret p1: comparable_probability_measures L M1 M2
-    by(unfold_locales, auto simp: assms)
   fix A assume AM1: " A \<in> sets M1"
-  then have AM2:" A \<in> sets M2"
-    by auto
   have "measure M1 A \<le> exp \<epsilon>1 * measure M2 A"
-    using DP_divergence_leE[OF DP1[simplified zero_ereal_def] AM1] by auto
+    using DP_divergence_leE[OF DP1[simplified zero_ereal_def]] by auto
   also have " ... \<le> exp \<epsilon>1 * exp \<epsilon>2 * measure M3 A"
-    using DP_divergence_leE[OF DP2[simplified zero_ereal_def] AM2] by auto
+    using DP_divergence_leE[OF DP2[simplified zero_ereal_def]] by auto
   finally have "measure M1 A \<le> exp (\<epsilon>1 + \<epsilon>2) * measure M3 A"
     unfolding exp_add[of \<epsilon>1 \<epsilon>2, symmetric] by auto
   thus "measure M1 A - exp (\<epsilon>1 + \<epsilon>2) * measure M3 A \<le> 0" by auto
